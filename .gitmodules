@@ -1,3 +1,6 @@
 [submodule "kokkos"]
 	path = kokkos
 	url = https://github.com/kokkos/kokkos.git
+[submodule "twopuncturesc"]
+	path = twopuncturesc
+	url = https://github.com/computationalrelativity/TwoPuncturesC.git
