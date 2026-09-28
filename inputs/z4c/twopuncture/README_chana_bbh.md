@@ -31,7 +31,7 @@ mkdir run && cd run
 ```
 
 Time a short run first (`time/nlim=50` on the command line) and scale by the
-~5500 cycles to `tlim = 37`.
+~2760 cycles to `tlim = 37` (cfl 0.5).
 
 Memory: AthenaK preallocates `<mesh_refinement>/max_nmb_per_rank` MeshBlocks
 (16000 in the input).  The run starts at 12236 blocks of 8^3 with 4 ghost

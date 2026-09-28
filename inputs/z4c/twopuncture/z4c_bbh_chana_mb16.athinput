@@ -6,8 +6,15 @@ problem = equal-mass quasicircular Bowen-York binary (Hannam et al. 2010 data),
           Units: G = c = M = 1.  chana ran the same data at M = 3.0e5 cm, so
           chana lengths / 3.0e5 cm and chana times / 1.00069228559445614e-05 s
           give the numbers here.
-          Grid from that run's dumps: domain +-96 M, 7^3 root blocks of 8^3
-          cells, max level 7 (dx_min = 0.02679 M), 6th-order Z4c in both codes.
+          16^3-MeshBlock variant of z4c_bbh_chana.athinput.  Same cell sizes
+          on every level as chana's run (root dx = 192/56 M, dx_min = 0.02679 M,
+          max level 7, 6th-order Z4c), but 16^3 blocks: the root is 64 cells
+          (4^3 blocks) over +-109.71 M instead of 56 over +-96 M, since the root
+          must be a whole number of blocks.  chana used 8^3 blocks, so the
+          refined regions are coarser-grained here than in chana's mesh.
+          Why: with 8^3 blocks AthenaK spends most of a step on per-block halo
+          bookkeeping and one MPI message per block-neighbour pair; 16^3 blocks
+          cut that ~8x and the ghost storage from 8x to 3.4x the interior.
           Known differences from chana: RK4 at cfl 0.5 (chana: eSSPRK(10,4)
           at dt = 0.84 dx_min); AthenaK derefines below dchi_max/2 (chana never
           derefines); this AthenaK has no chi floor (chana: floor_chi at 1e-12).
@@ -17,26 +24,26 @@ basename  = bbh
 
 <mesh>
 nghost    = 4          # 6th-order stencils, as chana's
-nx1       = 56         # 7 root blocks x 8 cells
-x1min     = -96.0
-x1max     = 96.0
+nx1       = 64         # 4 root blocks x 16 cells; dx = 3.428571 M as before
+x1min     = -109.71428571428571
+x1max     = 109.71428571428571
 ix1_bc    = outflow
 ox1_bc    = outflow
-nx2       = 56
-x2min     = -96.0
-x2max     = 96.0
+nx2       = 64
+x2min     = -109.71428571428571
+x2max     = 109.71428571428571
 ix2_bc    = outflow
 ox2_bc    = outflow
-nx3       = 56
-x3min     = -96.0
-x3max     = 96.0
+nx3       = 64
+x3min     = -109.71428571428571
+x3max     = 109.71428571428571
 ix3_bc    = outflow
 ox3_bc    = outflow
 
 <meshblock>
-nx1       = 8
-nx2       = 8
-nx3       = 8
+nx1       = 16
+nx2       = 16
+nx3       = 16
 
 <time>
 evolution  = dynamic
@@ -49,9 +56,9 @@ ndiag      = 1
 <mesh_refinement>
 refinement          = adaptive
 num_levels          = 8          # root + 7 (chana max_level = 7)
-max_nmb_per_rank    = 16000      # PREALLOCATED: ~3.1 MB per 8^3 block with 4 ghosts, so ~50 GB.
-                                 # The run starts at 12236 blocks; lower this only if the
-                                 # device has less memory, and raise it if AMR exceeds it.
+max_nmb_per_rank    = 1500       # PREALLOCATED per rank (GPU).  A 16^3 block with 4 ghosts is
+                                 # 24^3 = 3.4x an 8^3 block's storage (~6-10 MB); set for
+                                 # 4 GPUs.  Raise it if AMR reports exceeding it.
 ncycle_check        = 4          # chana amr_interval = 4
 refinement_interval = 4
 
@@ -61,23 +68,25 @@ dchi_max = 0.03                  # chana amr_refine_thresh
 
 # AthenaK refines only during evolution, one level per check, so start with the
 # punctures already at the finest level as chana does (~2.5 M across each).
+# Edges are on level-7 block boundaries (every 16 * 0.02679 = 0.42857 M from
+# -109.714), so AthenaK does not widen the boxes when it snaps them to blocks.
 <refinement1>
 level = 7
-x1min = 4.82
-x1max = 7.39
-x2min = -1.29
-x2max = 1.29
-x3min = -1.29
-x3max = 1.29
+x1min = 4.714285714285714
+x1max = 7.285714285714286
+x2min = -1.2857142857142858
+x2max = 1.2857142857142858
+x3min = -1.2857142857142858
+x3max = 1.2857142857142858
 
 <refinement2>
 level = 7
-x1min = -7.39
-x1max = -4.82
-x2min = -1.29
-x2max = 1.29
-x3min = -1.29
-x3max = 1.29
+x1min = -7.285714285714286
+x1max = -4.714285714285714
+x2min = -1.2857142857142858
+x2max = 1.2857142857142858
+x3min = -1.2857142857142858
+x3max = 1.2857142857142858
 
 <z4c>
 lapse_oplog     = 2.0
